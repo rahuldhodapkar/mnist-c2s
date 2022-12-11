@@ -1,0 +1,23 @@
+numpy
+pandas
+anndata
+scanpy
+torch
+torchvision
+torchtext
+transformers
+datasets
+evaluate
+tqdm
+
+# fastai
+fastai
+scikit-image
+scikit-learn
+pandas
+umap-learn
+fastai
+bayesian-optimization
+fastinference
+shap
+grad-cam
