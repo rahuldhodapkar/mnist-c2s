@@ -30,7 +30,7 @@ DELIM = ' '
 ## Load Data
 ################################################################################
 
-mnist = load_dataset("mnist", split="train[:5000]")
+mnist = load_dataset("mnist", split="train[:50]")
 mnist = mnist.train_test_split(test_size=0.2)
 
 labels = mnist["train"].features["label"].names
@@ -69,7 +69,8 @@ for i in tqdm(range(mnist['train'].shape[0])):
     shuffle_order = skutils.shuffle(range(len(x)))
     shuffle_sort_order = np.argsort(-x[shuffle_order], kind='stable')
     ixs = img_loc_labels[shuffle_order][shuffle_sort_order]
-    ixs = ixs[x[shuffle_order][shuffle_sort_order] > 0]
+    #ixs = ixs[x[shuffle_order][shuffle_sort_order] > 0]
+    ixs = ixs[:20]
     train_sentences.append(DELIM.join(ixs))
 
 
@@ -79,8 +80,9 @@ for i in tqdm(range(mnist['test'].shape[0])):
     shuffle_order = skutils.shuffle(range(len(x)))
     shuffle_sort_order = np.argsort(-x[shuffle_order], kind='stable')
     ixs = img_loc_labels[shuffle_order][shuffle_sort_order]
-    ixs = ixs[x[shuffle_order][shuffle_sort_order] > 0]
-    train_sentences.append(DELIM.join(ixs))
+    #ixs = ixs[x[shuffle_order][shuffle_sort_order] > 0]
+    ixs = ixs[:20]
+    test_sentences.append(DELIM.join(ixs))
 
 
 mnist_text = dsets.DatasetDict({
@@ -89,7 +91,7 @@ mnist_text = dsets.DatasetDict({
          for i in range(mnist['train'].shape[0])]
     ),
     'test': dsets.Dataset.from_list(
-        [{'text': train_sentences[i], 'label': mnist['test'][i]['label']}
+        [{'text': test_sentences[i], 'label': mnist['test'][i]['label']}
          for i in range(mnist['test'].shape[0])]
     )
 })
@@ -112,12 +114,13 @@ model = tfs.AutoModelForSequenceClassification.from_pretrained(
 # initial embeddings.
 #
 # See: https://nlp.stanford.edu/~johnhew/vocab-expansion.html
-
+''
 tokenizer.add_tokens(img_loc_labels.tolist())
 
 tokenizer(mnist_text['train'][0]['text'])
 
 model.resize_token_embeddings(len(tokenizer))
+
 
 n_new = len(img_loc_labels)
 
@@ -135,7 +138,6 @@ embeddings[-n_new:,:] = new_embeddings
 params['distilbert.embeddings.word_embeddings.weight'][-n_new:,:] = new_embeddings
 model.load_state_dict(params)
 
-
 def preprocess_function(examples):
     return tokenizer(examples["text"], truncation=True)
 
@@ -146,10 +148,10 @@ data_collator = tfs.DataCollatorWithPadding(tokenizer=tokenizer)
 
 training_args = tfs.TrainingArguments(
     output_dir="calc/mnist_text",
-    learning_rate=1e-3,
+    learning_rate=1e-2,
     per_device_train_batch_size=16,
     per_device_eval_batch_size=16,
-    num_train_epochs=5,
+    num_train_epochs=15,
     weight_decay=0.01,
     evaluation_strategy="epoch",
     save_strategy="epoch",
@@ -161,7 +163,7 @@ training_args = tfs.TrainingArguments(
 trainer = tfs.Trainer(
     model=model,
     args=training_args,
-    train_dataset=tokenized_mnist_text["train"],
+    train_dataset=tokenized_mnist_text["test"],
     eval_dataset=tokenized_mnist_text["test"],
     tokenizer=tokenizer,
     data_collator=data_collator,
@@ -183,24 +185,24 @@ classifier = tfs.pipeline(
 classifier(text)
 
 i = 1
-mnist_text['train'][i]['label']
-classifier(mnist_text['train'][i]['text'])
+mnist_text['test'][i]['label']
+classifier(mnist_text['test'][i]['text'])
 
 i = 2
-mnist_text['train'][i]['label']
-classifier(mnist_text['train'][i]['text'])
+mnist_text['test'][i]['label']
+classifier(mnist_text['test'][i]['text'])
 
 i = 3
-mnist_text['train'][i]['label']
-classifier(mnist_text['train'][i]['text'])
+mnist_text['test'][i]['label']
+classifier(mnist_text['test'][i]['text'])
 
 i = 4
-mnist_text['train'][i]['label']
-classifier(mnist_text['train'][i]['text'])
+mnist_text['test'][i]['label']
+classifier(mnist_text['test'][i]['text'])
 
 i = 5
-mnist_text['train'][i]['label']
-classifier(mnist_text['train'][i]['text'])
+mnist_text['test'][i]['label']
+classifier(mnist_text['test'][i]['text'])
 
 
 
