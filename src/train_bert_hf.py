@@ -33,8 +33,7 @@ DELIM = ' '
 ## Load Data
 ################################################################################
 
-mnist = load_dataset("mnist", split="train[:500]")
-mnist = mnist.train_test_split(test_size=0.2)
+mnist = load_dataset("mnist")
 
 labels = mnist["train"].features["label"].names
 label2id, id2label = dict(), dict()
@@ -201,26 +200,10 @@ for d in trainer.state.log_history:
 value_type_map = {
     'loss': epoch2loss,
     'eval_loss': epoch2eval_loss,
-#    'eval_accuracy': epoch2eval_acc
-}
-
-
-plot_df = pd.DataFrame([{
-    'epoch': int(e),
-    'value': value_type_map[t][e],
-    'type': t
-} for e in epoch2loss.keys()
-  for t in value_type_map.keys()])
-
-(pn.ggplot(plot_df, pn.aes(x='epoch', y='value', color='type'))
-    + pn.geom_line())
-
-value_type_map = {
-#    'loss': epoch2loss,
-#    'eval_loss': epoch2eval_loss,
     'eval_accuracy': epoch2eval_acc
 }
 
+
 plot_df = pd.DataFrame([{
     'epoch': int(e),
     'value': value_type_map[t][e],
@@ -228,65 +211,6 @@ plot_df = pd.DataFrame([{
 } for e in epoch2loss.keys()
   for t in value_type_map.keys()])
 
-(pn.ggplot(plot_df, pn.aes(x='epoch', y='value', color='type'))
-    + pn.geom_line())
+plot_df.to_csv('./calc/training_history.csv')
 
-
-
-
-text = "This was a masterpiece. Not completely faithful to the books, but enthralling from beginning to end. Might be my favorite of the three."
-classifier = tfs.pipeline(
-    "text-classification",
-    model=model,
-    tokenizer=tokenizer)
-classifier(text)
-
-i = 1
-mnist_text['test'][i]['label']
-classifier(mnist_text['test'][i]['text'])
-
-i = 2
-mnist_text['test'][i]['label']
-classifier(mnist_text['test'][i]['text'])
-
-i = 3
-mnist_text['test'][i]['label']
-classifier(mnist_text['test'][i]['text'])
-
-i = 4
-mnist_text['test'][i]['label']
-classifier(mnist_text['test'][i]['text'])
-
-i = 5
-mnist_text['test'][i]['label']
-classifier(mnist_text['test'][i]['text'])
-
-
-
-
-
-
-
-
-
-checkpoint = "distilbert-base-uncased-finetuned-sst-2-english"
-tokenizer = tfs.AutoTokenizer.from_pretrained(checkpoint)
-
-sequence = "I've been waiting for a HuggingFace course my whole life."
-
-model_inputs = tokenizer(sequence)
-print(model_inputs["input_ids"])
-
-tokens = tokenizer.tokenize(sequence)
-ids = tokenizer.convert_tokens_to_ids(tokens)
-
-print(tokenizer.decode(model_inputs["input_ids"]))
-print(tokenizer.decode(ids))
-
-
-model = AutoModelForSequenceClassification.from_pretrained(checkpoint)
-sequences = ["I've been waiting for a HuggingFace course my whole life.", "So have I!"]
-
-tokens = tokenizer(sequences, padding=True, truncation=True, return_tensors="pt")
-output = model(**tokens)
-
+print('All done!')
