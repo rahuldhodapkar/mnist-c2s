@@ -30,7 +30,7 @@ DELIM = ' '
 ## Load Data
 ################################################################################
 
-mnist = load_dataset("mnist", split="train[:50]")
+mnist = load_dataset("mnist", split="train[:500]")
 mnist = mnist.train_test_split(test_size=0.2)
 
 labels = mnist["train"].features["label"].names
@@ -163,7 +163,7 @@ training_args = tfs.TrainingArguments(
 trainer = tfs.Trainer(
     model=model,
     args=training_args,
-    train_dataset=tokenized_mnist_text["test"],
+    train_dataset=tokenized_mnist_text["train"],
     eval_dataset=tokenized_mnist_text["test"],
     tokenizer=tokenizer,
     data_collator=data_collator,
