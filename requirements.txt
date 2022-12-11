@@ -5,4 +5,5 @@ transformers
 datasets
 evaluate
 tqdm
+plotnine
 

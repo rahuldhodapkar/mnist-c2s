@@ -14,6 +14,9 @@ import datasets as dsets
 from tqdm import tqdm
 import sklearn.utils as skutils
 
+import plotnine as pn
+import pandas as pd
+
 ################################################################################
 ## Hyperparameters
 ################################################################################
@@ -110,6 +113,9 @@ model = tfs.AutoModelForSequenceClassification.from_pretrained(
     label2id=label2id
 )
 
+# reset weights
+#model.base_model.transformer.layer[-1].apply(model._init_weights)
+
 # we will need to add tokens to our tokenizer and give reasonable
 # initial embeddings.
 #
@@ -148,12 +154,13 @@ data_collator = tfs.DataCollatorWithPadding(tokenizer=tokenizer)
 
 training_args = tfs.TrainingArguments(
     output_dir="calc/mnist_text",
-    learning_rate=1e-2,
+    learning_rate=1e-3,
     per_device_train_batch_size=16,
     per_device_eval_batch_size=16,
-    num_train_epochs=15,
+    num_train_epochs=20,
     weight_decay=0.01,
     evaluation_strategy="epoch",
+    logging_strategy="epoch",
     save_strategy="epoch",
     load_best_model_at_end=True,
     push_to_hub=False,
@@ -174,6 +181,56 @@ for param in model.base_model.transformer.parameters():
     param.requires_grad = False
 
 trainer.train()
+
+################################################################################
+## Plot Training Curves
+################################################################################
+
+
+epoch2loss = {}
+epoch2eval_loss = {}
+epoch2eval_acc = {}
+for d in trainer.state.log_history:
+    if 'epoch' in d and 'loss' in d:
+        epoch2loss[d['epoch']] = d['loss']
+    if 'epoch' in d and 'eval_loss' in d:
+        epoch2eval_loss[d['epoch']] = d['eval_loss']
+    if 'epoch' in d and 'eval_accuracy' in d:
+        epoch2eval_acc[d['epoch']] = d['eval_accuracy']
+
+value_type_map = {
+    'loss': epoch2loss,
+    'eval_loss': epoch2eval_loss,
+#    'eval_accuracy': epoch2eval_acc
+}
+
+
+plot_df = pd.DataFrame([{
+    'epoch': int(e),
+    'value': value_type_map[t][e],
+    'type': t
+} for e in epoch2loss.keys()
+  for t in value_type_map.keys()])
+
+(pn.ggplot(plot_df, pn.aes(x='epoch', y='value', color='type'))
+    + pn.geom_line())
+
+value_type_map = {
+#    'loss': epoch2loss,
+#    'eval_loss': epoch2eval_loss,
+    'eval_accuracy': epoch2eval_acc
+}
+
+plot_df = pd.DataFrame([{
+    'epoch': int(e),
+    'value': value_type_map[t][e],
+    'type': t
+} for e in epoch2loss.keys()
+  for t in value_type_map.keys()])
+
+(pn.ggplot(plot_df, pn.aes(x='epoch', y='value', color='type'))
+    + pn.geom_line())
+
 
 
 
