@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Train a vision learner on mnist using huggingface models
+# Train a vision learner on mnist using huggingface models from scratch
 #
 
 from datasets import load_dataset
