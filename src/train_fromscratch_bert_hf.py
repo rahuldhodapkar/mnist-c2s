@@ -104,6 +104,9 @@ mnist_text = dsets.DatasetDict({
 
 tokenizer = tfs.AutoTokenizer.from_pretrained("distilbert-base-uncased")
 
+config = tfs.DistilBertConfig()
+model_raw = tfs.DistilBertModel(config)
+
 model = tfs.AutoModelForSequenceClassification.from_pretrained(
     "distilbert-base-uncased",
     ignore_mismatched_sizes=True,
@@ -112,6 +115,8 @@ model = tfs.AutoModelForSequenceClassification.from_pretrained(
     label2id=label2id
 )
 
+model.base_model.transformer = model_raw.base_model.transformer
+
 # reset weights
 #model.base_model.transformer.layer[-1].apply(model._init_weights)
 
@@ -119,14 +124,11 @@ model = tfs.AutoModelForSequenceClassification.from_pretrained(
 # initial embeddings.
 #
 # See: https://nlp.stanford.edu/~johnhew/vocab-expansion.html
-''
+
 tokenizer.add_tokens(img_loc_labels.tolist())
-
-tokenizer(mnist_text['train'][0]['text'])
-
 model.resize_token_embeddings(len(tokenizer))
 
-
+"""
 n_new = len(img_loc_labels)
 
 params = model.state_dict()
@@ -142,6 +144,8 @@ new_embeddings = torch.stack(tuple((dist.sample() for _ in range(n_new))), dim=0
 embeddings[-n_new:,:] = new_embeddings
 params['distilbert.embeddings.word_embeddings.weight'][-n_new:,:] = new_embeddings
 model.load_state_dict(params)
+"""
+
 
 def preprocess_function(examples):
     return tokenizer(examples["text"], truncation=True)
@@ -211,6 +215,6 @@ plot_df = pd.DataFrame([{
 } for e in epoch2loss.keys()
   for t in value_type_map.keys()])
 
-plot_df.to_csv('./calc/training_history.csv', index=False)
+plot_df.to_csv('./calc/training_history_fromscratch.csv', index=False)
 
 print('All done!')
