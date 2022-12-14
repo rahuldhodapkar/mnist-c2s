@@ -1,2 +1,5 @@
 .DS_Store
 calc
+
+*.swp
+*.swo

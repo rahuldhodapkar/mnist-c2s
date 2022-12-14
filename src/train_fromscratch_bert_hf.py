@@ -91,12 +91,12 @@ mnist_text = dsets.DatasetDict({
     'train': dsets.Dataset.from_list(
         [{'text': train_sentences[i], 'label': mnist['train'][i]['label']}
          #for i in range(mnist['train'].shape[0])]
-         for i in range(100)]
+         for i in range(1000)]
     ),
     'test': dsets.Dataset.from_list(
         [{'text': test_sentences[i], 'label': mnist['test'][i]['label']}
-         #for i in range(mnist['test'].shape[0])]
-         for i in range(100)]
+         for i in range(mnist['test'].shape[0])]
+         #for i in range(1000)]
     )
 })
 
@@ -167,11 +167,13 @@ training_args = tfs.TrainingArguments(
     learning_rate=1e-3,
     per_device_train_batch_size=16,
     per_device_eval_batch_size=16,
-    num_train_epochs=10,
+    num_train_epochs=5,
     weight_decay=0.01,
-    evaluation_strategy="epoch",
-    logging_strategy="epoch",
-    save_strategy="epoch",
+    evaluation_strategy="steps",
+    logging_strategy="steps",
+    save_strategy="steps",
+    eval_steps=50,
+    logging_steps=50,
     load_best_model_at_end=True,
     push_to_hub=False,
 )
@@ -216,13 +218,14 @@ value_type_map = {
     'eval_accuracy': epoch2eval_acc
 }
 
-
 plot_df = pd.DataFrame([{
-    'epoch': int(e),
+    'epoch': e,
     'value': value_type_map[t][e],
     'type': t
 } for e in epoch2loss.keys()
   for t in value_type_map.keys()])
+
+print(plot_df)
 
 plot_df.to_csv('./calc/training_history_fromscratch.csv', index=False)
 

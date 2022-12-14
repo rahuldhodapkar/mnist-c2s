@@ -24,14 +24,16 @@ def compute_metrics(eval_pred):
 ## Load Data
 ################################################################################
 
-mnist = load_dataset("mnist", split="train[:5000]")
-mnist = mnist.train_test_split(test_size=0.2)
+mnist = load_dataset("fashion_mnist")
+mnist['train'] = load_dataset("fashion_mnist", split="train[:1000]")
+#mnist = mnist.train_test_split(test_size=0.2)
 
 labels = mnist["train"].features["label"].names
 label2id, id2label = dict(), dict()
 for i, label in enumerate(labels):
     label2id[label] = str(i)
     id2label[str(i)] = label
+
 
 ################################################################################
 ## Train Model
@@ -73,7 +75,7 @@ training_args = tfs.TrainingArguments(
     per_device_train_batch_size=16,
     gradient_accumulation_steps=4,
     per_device_eval_batch_size=16,
-    num_train_epochs=3,
+    num_train_epochs=10,
     warmup_ratio=0.1,
     logging_steps=10,
     load_best_model_at_end=True,

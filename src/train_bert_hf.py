@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Train a vision learner on mnist using huggingface models
+# Train a vision learner on mnist using huggingface models from scratch
 #
 
 from datasets import load_dataset
@@ -33,7 +33,7 @@ DELIM = ' '
 ## Load Data
 ################################################################################
 
-mnist = load_dataset("mnist")
+mnist = load_dataset("fashion_mnist")
 
 labels = mnist["train"].features["label"].names
 label2id, id2label = dict(), dict()
@@ -90,11 +90,13 @@ for i in tqdm(range(mnist['test'].shape[0])):
 mnist_text = dsets.DatasetDict({
     'train': dsets.Dataset.from_list(
         [{'text': train_sentences[i], 'label': mnist['train'][i]['label']}
-         for i in range(mnist['train'].shape[0])]
+         #for i in range(mnist['train'].shape[0])]
+         for i in range(100)]
     ),
     'test': dsets.Dataset.from_list(
         [{'text': test_sentences[i], 'label': mnist['test'][i]['label']}
          for i in range(mnist['test'].shape[0])]
+         #for i in range(1000)]
     )
 })
 
@@ -104,6 +106,9 @@ mnist_text = dsets.DatasetDict({
 
 tokenizer = tfs.AutoTokenizer.from_pretrained("distilbert-base-uncased")
 
+config = tfs.DistilBertConfig()
+model_raw = tfs.DistilBertModel(config)
+
 model = tfs.AutoModelForSequenceClassification.from_pretrained(
     "distilbert-base-uncased",
     ignore_mismatched_sizes=True,
@@ -112,20 +117,23 @@ model = tfs.AutoModelForSequenceClassification.from_pretrained(
     label2id=label2id
 )
 
-# reset weights
-#model.base_model.transformer.layer[-1].apply(model._init_weights)
+params = model_raw.state_dict()
+params = {'distilbert.' + k:params[k] for k in params.keys()}
+for k in model.state_dict().keys():
+    if k not in params:
+        params[k] = model.state_dict()[k]
+
+
+# reset transformer weights to initialization conditions
+#model.load_state_dict(params)
 
 # we will need to add tokens to our tokenizer and give reasonable
 # initial embeddings.
 #
 # See: https://nlp.stanford.edu/~johnhew/vocab-expansion.html
-''
+
 tokenizer.add_tokens(img_loc_labels.tolist())
-
-tokenizer(mnist_text['train'][0]['text'])
-
 model.resize_token_embeddings(len(tokenizer))
-
 
 n_new = len(img_loc_labels)
 
@@ -143,6 +151,7 @@ embeddings[-n_new:,:] = new_embeddings
 params['distilbert.embeddings.word_embeddings.weight'][-n_new:,:] = new_embeddings
 model.load_state_dict(params)
 
+
 def preprocess_function(examples):
     return tokenizer(examples["text"], truncation=True)
 
@@ -156,11 +165,13 @@ training_args = tfs.TrainingArguments(
     learning_rate=1e-3,
     per_device_train_batch_size=16,
     per_device_eval_batch_size=16,
-    num_train_epochs=5,
+    num_train_epochs=10,
     weight_decay=0.01,
-    evaluation_strategy="steps",
-    logging_strategy="steps",
-    save_strategy="steps",
+    evaluation_strategy="epoch",
+    logging_strategy="epoch",
+    save_strategy="epoch",
+    eval_steps=50,
+    logging_steps=50,
     load_best_model_at_end=True,
     push_to_hub=False,
 )
@@ -176,8 +187,10 @@ trainer = tfs.Trainer(
     compute_metrics=compute_metrics,
 )
 
+
 for param in model.base_model.transformer.parameters():
     param.requires_grad = False
+
 
 trainer.train()
 
@@ -203,13 +216,14 @@ value_type_map = {
     'eval_accuracy': epoch2eval_acc
 }
 
-
 plot_df = pd.DataFrame([{
-    'epoch': int(e),
+    'epoch': e,
     'value': value_type_map[t][e],
     'type': t
 } for e in epoch2loss.keys()
   for t in value_type_map.keys()])
+
+print(plot_df)
 
 plot_df.to_csv('./calc/training_history.csv', index=False)
 
