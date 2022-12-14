@@ -115,7 +115,15 @@ model = tfs.AutoModelForSequenceClassification.from_pretrained(
     label2id=label2id
 )
 
-model.base_model.transformer = model_raw.base_model.transformer
+params = model_raw.state_dict()
+params = {'distilbert.' + k:params[k] for k in params.keys()}
+for k in model.state_dict().keys():
+    if k not in params:
+        params[k] = model.state_dict()[k]
+
+
+# reset transformer weights to initialization conditions
+model.load_state_dict(params)
 
 # reset weights
 #model.base_model.transformer.layer[-1].apply(model._init_weights)
