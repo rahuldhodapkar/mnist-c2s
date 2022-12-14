@@ -33,7 +33,7 @@ DELIM = ' '
 ## Load Data
 ################################################################################
 
-mnist = load_dataset("mnist")
+mnist = load_dataset("fashion_mnist")
 
 labels = mnist["train"].features["label"].names
 label2id, id2label = dict(), dict()
@@ -90,11 +90,13 @@ for i in tqdm(range(mnist['test'].shape[0])):
 mnist_text = dsets.DatasetDict({
     'train': dsets.Dataset.from_list(
         [{'text': train_sentences[i], 'label': mnist['train'][i]['label']}
-         for i in range(mnist['train'].shape[0])]
+         #for i in range(mnist['train'].shape[0])]
+         for i in range(100)]
     ),
     'test': dsets.Dataset.from_list(
         [{'text': test_sentences[i], 'label': mnist['test'][i]['label']}
-         for i in range(mnist['test'].shape[0])]
+         #for i in range(mnist['test'].shape[0])]
+         for i in range(100)]
     )
 })
 
@@ -124,9 +126,6 @@ for k in model.state_dict().keys():
 
 # reset transformer weights to initialization conditions
 model.load_state_dict(params)
-
-# reset weights
-#model.base_model.transformer.layer[-1].apply(model._init_weights)
 
 # we will need to add tokens to our tokenizer and give reasonable
 # initial embeddings.
@@ -168,11 +167,11 @@ training_args = tfs.TrainingArguments(
     learning_rate=1e-3,
     per_device_train_batch_size=16,
     per_device_eval_batch_size=16,
-    num_train_epochs=5,
+    num_train_epochs=10,
     weight_decay=0.01,
-    evaluation_strategy="steps",
-    logging_strategy="steps",
-    save_strategy="steps",
+    evaluation_strategy="epoch",
+    logging_strategy="epoch",
+    save_strategy="epoch",
     load_best_model_at_end=True,
     push_to_hub=False,
 )
@@ -188,8 +187,10 @@ trainer = tfs.Trainer(
     compute_metrics=compute_metrics,
 )
 
+
 for param in model.base_model.transformer.parameters():
     param.requires_grad = False
+
 
 trainer.train()
 
