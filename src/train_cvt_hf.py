@@ -41,7 +41,7 @@ for i, label in enumerate(labels):
 ################################################################################
 
 image_processor = tfs.AutoImageProcessor.from_pretrained(
-    "microsoft/resnet-34")
+    "microsoft/cvt-13-384")
 
 _transforms = tt.Compose([
     tt.ToTensor()
@@ -59,7 +59,7 @@ data_collator = tfs.DefaultDataCollator()
 
 
 model = tfs.AutoModelForImageClassification.from_pretrained(
-    "microsoft/resnet-34",
+    "microsoft/cvt-13-384",
     ignore_mismatched_sizes=True,
     num_labels=len(labels),
     id2label=id2label,
@@ -127,6 +127,6 @@ plot_df = pd.DataFrame([{
 
 print(plot_df)
 
-plot_df.to_csv('./calc/training_history_resnet.csv', index=False)
+plot_df.to_csv('./calc/training_history_cvt.csv', index=False)
 
 print('All done!')
