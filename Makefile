@@ -20,3 +20,18 @@ bert_tests:
 		-n 10000 \
 		-t 30 \
 		-o calc/distilbert_fashionmnist_n10000_t30.csv
+	python src/text_models/bert.py \
+		-d mnist \
+		-n 100 \
+		-t 30 \
+		-o calc/distilbert_mnist_n100_t30.csv
+	python src/text_models/bert.py \
+		-d mnist \
+		-n 1000 \
+		-t 30 \
+		-o calc/distilbert_mnist_n1000_t30.csv
+	python src/text_models/bert.py \
+		-d mnist \
+		-n 10000 \
+		-t 30 \
+		-o calc/distilbert_mnist_n10000_t30.csv
