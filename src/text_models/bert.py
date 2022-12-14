@@ -30,6 +30,7 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument('-d', '--dataset')
 parser.add_argument('-n', '--num_training_samples')
+parser.add_argument('-t', '--num_epochs')
 parser.add_argument('-o', '--training_history_outfile')
 
 args = parser.parse_args()
@@ -184,7 +185,7 @@ training_args = tfs.TrainingArguments(
     learning_rate=1e-3,
     per_device_train_batch_size=16,
     per_device_eval_batch_size=16,
-    num_train_epochs=10,
+    num_train_epochs=args.num_epochs,
     weight_decay=0.01,
     evaluation_strategy="epoch",
     logging_strategy="epoch",
