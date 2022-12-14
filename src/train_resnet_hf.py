@@ -94,3 +94,37 @@ trainer = tfs.Trainer(
 )
 
 trainer.train()
+
+################################################################################
+## Plot Training Curves
+################################################################################
+
+epoch2loss = {}
+epoch2eval_loss = {}
+epoch2eval_acc = {}
+for d in trainer.state.log_history:
+    if 'epoch' in d and 'loss' in d:
+        epoch2loss[d['epoch']] = d['loss']
+    if 'epoch' in d and 'eval_loss' in d:
+        epoch2eval_loss[d['epoch']] = d['eval_loss']
+    if 'epoch' in d and 'eval_accuracy' in d:
+        epoch2eval_acc[d['epoch']] = d['eval_accuracy']
+
+value_type_map = {
+    'loss': epoch2loss,
+    'eval_loss': epoch2eval_loss,
+    'eval_accuracy': epoch2eval_acc
+}
+
+plot_df = pd.DataFrame([{
+    'epoch': e,
+    'value': value_type_map[t][e],
+    'type': t
+} for e in epoch2loss.keys()
+  for t in value_type_map.keys()])
+
+print(plot_df)
+
+plot_df.to_csv('./calc/training_history_resnet.csv', index=False)
+
+print('All done!')
