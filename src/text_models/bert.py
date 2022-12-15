@@ -67,8 +67,12 @@ _transforms = tt.Compose([
 ])
 
 def transforms(examples):
-    examples["pixel_values"] = [_transforms(img) for img in examples["image"]]
-    del examples["image"]
+    if "image" in examples:
+        examples["pixel_values"] = [_transforms(img) for img in examples["image"]]
+        del examples["image"]
+    if "img" in examples:
+        examples["pixel_values"] = [_transforms(img.convert('RGB')) for img in examples["img"]]
+        del examples["img"]
     return examples
 
 
@@ -181,11 +185,11 @@ data_collator = tfs.DataCollatorWithPadding(tokenizer=tokenizer)
 
 
 training_args = tfs.TrainingArguments(
-    output_dir="calc/mnist_text",
+    output_dir="calc/{}".format(args.dataset),
     learning_rate=1e-3,
     per_device_train_batch_size=16,
     per_device_eval_batch_size=16,
-    num_train_epochs=args.num_epochs,
+    num_train_epochs=int(args.num_epochs),
     weight_decay=0.01,
     evaluation_strategy="epoch",
     logging_strategy="epoch",
