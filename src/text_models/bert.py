@@ -185,7 +185,7 @@ data_collator = tfs.DataCollatorWithPadding(tokenizer=tokenizer)
 
 
 training_args = tfs.TrainingArguments(
-    output_dir="calc/{}".format(args.dataset),
+    output_dir="calc/{}_bert_{}".format(args.dataset, int(np.random.rand() * 1e6)),
     learning_rate=1e-3,
     per_device_train_batch_size=16,
     per_device_eval_batch_size=16,

@@ -90,7 +90,7 @@ model = tfs.AutoModelForImageClassification.from_pretrained(
 
 
 training_args = tfs.TrainingArguments(
-    output_dir="calc/{}".format(args.dataset),
+    output_dir="calc/{}_cvt_{}".format(args.dataset, int(np.random.rand() * 1e6)),
     remove_unused_columns=False,
     evaluation_strategy="epoch",
     save_strategy="epoch",
